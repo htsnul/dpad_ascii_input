@@ -6,45 +6,30 @@
 <div><input class="progress" /></div>
 <div class="candidate"></div>
 <script>
-  function canMerge(...codes) {
-    return (
-      codes.every(c => 0x00 <= c && c <= 0x08) ||
-      codes.every(c => 0x0b <= c && c <= 0x1f) ||
-      codes.every(c => 0x7f <= c && c <= 0xff) ||
-      codes.every(c => "0".codePointAt(0) <= c && c <= "9".codePointAt(0)) ||
-      codes.every(c => "A".codePointAt(0) <= c && c <= "Z".codePointAt(0)) ||
-      codes.every(c => "a".codePointAt(0) <= c && c <= "z".codePointAt(0))
-    );
-  }
   function codeToStr(i) {
-    if (i === 0x09) return "Tab";
-    if (i === 0x0a) return "Enter";
-    if (i === 0x20) return "Space";
-    if (i < 0x20 || 0x7f <= i) return `0x${i.toString(16).padStart(2, "0")}`;
+    if (i === 0x09) return "[Tab]";
+    if (i === 0x0a) return "[Enter]";
+    if (i === 0x20) return "[Space]";
+    if (i < 0x20 || 0x7f <= i) return "";
     return String.fromCodePoint(i);
   }
-  function updateCandidates(codeStart, codeLength) {
-    let html = "";
-    const colCount = codeLength / 4;
+  function updateCandidates(codeStart, codeLen) {
+    let html = '<table style="font-family: monospace;">';
+    const rowCodeLen = codeLen / 4;
     for (let i = 0; i < 4; ++i) {
-      html += `<div>${"↑←→↓"[i]}: `;
-      let lastCode = null;
-      let isMerging = false;
-      for (let j = 0; j < colCount; ++j) {
-        const code = codeStart + colCount * i + j;
-        if (lastCode !== null && canMerge(lastCode, code)) {
-          isMerging = true;
-        } else {
-          html +=
-            (isMerging ? `-${codeToStr(lastCode)}` : "") +
-            (lastCode !== null ? " " : "") +
-            codeToStr(code);
-          isMerging = false;
-        }
-        lastCode = code;
+      const rowCodeStart = codeStart + rowCodeLen * i;
+      html += "<tr>";
+      html += `<td>${"↑←→↓"[i]}</td>`
+      html += `<td>0x${rowCodeStart.toString(16).padStart(2, "0")}</td>`;
+      html += "<td>";
+      for (let j = 0; j < rowCodeLen; ++j) {
+        const code = rowCodeStart + j;
+        html += codeToStr(code);
       }
-      html += `${isMerging ? `-${codeToStr(lastCode)}` : ""}</div>`;
+      html += "</td>";
+      html += "</tr>";
     }
+    html += "</table>";
     document.querySelector(".candidate").innerHTML = html;
   }
   function updateProgress(code2bs) {
@@ -64,13 +49,13 @@
       e.preventDefault();
     }
     updateProgress(code2bs);
-    let code = code2bs.reduce((a, c, i) => a + c * Math.pow(4, 3 - i), 0);
+    let code = code2bs.reduce((a, c, i) => a + (c << (2 * (3 - i))), 0);
     if (code2bs.length === 4) {
       document.querySelector(".text").value += String.fromCodePoint(code);
       code = 0;
       code2bs = [];
     }
-    updateCandidates(code, 256 / Math.pow(4, code2bs.length));
+    updateCandidates(code, 256 / (1 << (code2bs.length * 2)));
   }
   onload = () => {
     updateCandidates(0, 256);
