@@ -43,10 +43,11 @@
     if (idx >= 0) {
       code2bs.push(idx);
       e.preventDefault();
-    }
-    if (e.key === "Escape") {
+    } else if (e.key === "Escape") {
       code2bs.pop();
       e.preventDefault();
+    } else {
+      code2bs = [];
     }
     updateProgress(code2bs);
     let code = code2bs.reduce((a, c, i) => a + (c << (2 * (3 - i))), 0);
