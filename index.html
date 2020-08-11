@@ -96,19 +96,21 @@
     if (idx >= 0) {
       code2bs.push(idx);
       e.preventDefault();
-    } else if (e.key === "Escape") {
-      code2bs.pop();
-      e.preventDefault();
+    } else if (e.key === "Backspace") {
+      if (code2bs.length) {
+        code2bs.pop();
+        e.preventDefault();
+      }
     } else {
       code2bs = [];
     }
-    updateProgress(code2bs);
     let code = code2bs.reduce((a, c, i) => a + (c << (2 * (3 - i))), 0);
     if (code2bs.length === 4) {
       document.querySelector(".input").value += String.fromCodePoint(code);
       code = 0;
       code2bs = [];
     }
+    updateProgress(code2bs);
     checkFinished();
     updateCandidates(code, 256 / (1 << (code2bs.length * 2)));
   }
