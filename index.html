@@ -14,6 +14,81 @@
 <div><input class="progress" disabled /></div>
 <div class="candidate"></div>
 <script>
+  let gamepad;
+  class Gamepad {
+    constructor(onDown) {
+      this._lastButtons = [];
+      this._axesButtons = { up: false, down: false, left: false, right: false };
+      this._onDown = onDown;
+    }
+    _getValidGamepad() {
+      return Array.from(navigator.getGamepads()).find((gp) => (gp && gp.connected));
+    }
+    update() {
+      const gp = this._getValidGamepad();
+      if (!gp) {
+        return;
+      }
+      if (!this._lastButtons[0] && gp.buttons[0].pressed) {
+        this._onDown("Backspace");
+      }
+      if (!this._lastButtons[12] && gp.buttons[12].pressed) {
+        this._onDown("Up");
+      }
+      if (!this._lastButtons[13] && gp.buttons[13].pressed) {
+        this._onDown("Down");
+      }
+      if (!this._lastButtons[14] && gp.buttons[14].pressed) {
+        this._onDown("Left");
+      }
+      if (!this._lastButtons[15] && gp.buttons[15].pressed) {
+        this._onDown("Right");
+      }
+      this._lastButtons = gp.buttons.map((b) => b.pressed);
+      const thresholdDown = 0.6;
+      const thresholdUp = 0.4;
+      if (this._axesButtons.right) {
+        if (gp.axes[0] < thresholdUp) {
+          this._axesButtons.right = false;
+        }
+      } else {
+        if (gp.axes[0] > thresholdDown) {
+          this._axesButtons.right = true;
+          this._onDown("Right");
+        }
+      }
+      if (this._axesButtons.left) {
+        if (gp.axes[0] > -thresholdUp) {
+          this._axesButtons.left = false;
+        }
+      } else {
+        if (gp.axes[0] < -thresholdDown) {
+          this._axesButtons.left = true;
+          this._onDown("Left");
+        }
+      }
+      if (this._axesButtons.down) {
+        if (gp.axes[1] < thresholdUp) {
+          this._axesButtons.down = false;
+        }
+      } else {
+        if (gp.axes[1] > thresholdDown) {
+          this._axesButtons.down = true;
+          this._onDown("Down");
+        }
+      }
+      if (this._axesButtons.up) {
+        if (gp.axes[1] > -thresholdUp) {
+          this._axesButtons.up = false;
+        }
+      } else {
+        if (gp.axes[1] < -thresholdDown) {
+          this._axesButtons.up = true;
+          this._onDown("Up");
+        }
+      }
+    }
+  }
   const sentences = [
     "Haste makes waste.",
     "A stitch in time saves nine.",
@@ -77,7 +152,7 @@
     const progress = code2bs.reduce((a, c) => a + "↑←→↓"[c], "");
     document.querySelector(".progress").value = progress;
   }
-  function checkFinished() {
+  function checkSentence() {
     const target = document.querySelector(".target").value;
     const input = document.querySelector(".input").value;
     if (input === target) {
@@ -90,16 +165,17 @@
     }
   }
   let code2bs = [];
-  function onKeyDown(e) {
-    const arrowKeys = ["ArrowUp", "ArrowLeft", "ArrowRight", "ArrowDown"];
-    const idx = arrowKeys.indexOf(e.key);
+  function onDown(key) {
+    const dirKeys = ["Up", "Left", "Right", "Down"];
+    const idx = dirKeys.indexOf(key);
     if (idx >= 0) {
       code2bs.push(idx);
-      e.preventDefault();
-    } else if (e.key === "Backspace") {
+    } else if (key === "Backspace") {
       if (code2bs.length) {
         code2bs.pop();
-        e.preventDefault();
+      } else {
+        const str = document.querySelector(".input").value;
+        document.querySelector(".input").value = str.slice(0, -1);
       }
     } else {
       code2bs = [];
@@ -111,13 +187,36 @@
       code2bs = [];
     }
     updateProgress(code2bs);
-    checkFinished();
+    checkSentence();
     updateCandidates(code, 256 / (1 << (code2bs.length * 2)));
   }
+  function onKeyDown(e) {
+    if (e.key.startsWith("Arrow")) {
+      onDown(e.key.slice(5));
+      e.preventDefault();
+    } else if (e.key === "Backspace") {
+      onDown(e.key);
+      e.preventDefault();
+    }
+  }
+  function onGamepadDown(e) {
+    onDown(e);
+  }
+  function update() {
+    gamepad.update();
+    requestAnimationFrame(update);
+  }
   onload = () => {
+    document.querySelector(".time").value = "";
+    document.querySelector(".wpm").value = "";
+    document.querySelector(".cpm").value = "";
+    document.querySelector(".input").value = "";
+    document.querySelector(".progress").value = "";
+    gamepad = new Gamepad(onGamepadDown);
     setTargetSentence();
     updateCandidates(0, 256);
-    document.querySelector(".input").onkeydown = e => onKeyDown(e);
+    document.querySelector(".input").onkeydown = (e) => onKeyDown(e);
+    requestAnimationFrame(update);
     setInterval(() => {
       document.querySelector(".time").value = ++time;
     }, 1000);
