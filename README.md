@@ -28,7 +28,7 @@ Specification and implementation of ASCII character input with a cross key on a 
 Hello World
 ```
 
-| Letter | Input |
+| Character | Input |
 |---|---|
 | H | ←↑→↑ |
 | e | ←→←← |
@@ -56,7 +56,7 @@ Can measure WPM and CPM.
 
 You can enter faster if you enter as follows.
 
-| Letter | Input | Modified input |
+| Character | Input | Modified input |
 | --- | --- | --- |
 | a | ←→↑← | ←→↗↑↖ |
 | b | ←→↑→ | ←→↑↗ |
@@ -74,7 +74,7 @@ So, in the end, it is expected that the performance will be about half that of g
 
 ## List
 
-| 入力 | 分類 |
+| Caracter | Input |
 |---|---|
 | Tab | ↑↑→← |
 | Enter | ↑↑→→ |
