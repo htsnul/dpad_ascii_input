@@ -135,7 +135,7 @@
     for (let i = 0; i < 4; ++i) {
       const rowCodeStart = codeStart + rowCodeLen * i;
       html += "<tr>";
-      html += `<td>${"↑←→↓"[i]}</td>`
+      html += `<td>${"↑→↓←"[i]}</td>`
       html += `<td>0x${rowCodeStart.toString(16).padStart(2, "0")}</td>`;
       html += "<td>";
       for (let j = 0; j < rowCodeLen; ++j) {
@@ -149,7 +149,7 @@
     document.querySelector(".candidate").innerHTML = html;
   }
   function updateProgress(code2bs) {
-    const progress = code2bs.reduce((a, c) => a + "↑←→↓"[c], "");
+    const progress = code2bs.reduce((a, c) => a + "↑→↓←"[c], "");
     document.querySelector(".progress").value = progress;
   }
   function checkSentence() {
@@ -166,7 +166,7 @@
   }
   let code2bs = [];
   function onDown(key) {
-    const dirKeys = ["Up", "Left", "Right", "Down"];
+    const dirKeys = ["Up", "Right", "Down", "Left"];
     const idx = dirKeys.indexOf(key);
     if (idx >= 0) {
       code2bs.push(idx);
